@@ -82,7 +82,15 @@ export async function signup(username, password) {
   }
 }
 
-export function logout() {
+export async function logout() {
+  const res = await fetch(`${baseURL}/api/logout`);
+  const body = await res.text();
+
+  if (res.status !== 200) {
+    throw new Error(body);
+  }
+
+
   document.cookie = "auth=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/";
 
   store.commit("setJWT", "");

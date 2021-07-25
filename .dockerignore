@@ -1,3 +1,5 @@
 *
 !.docker.json
+!mount.sh
+!umount.sh
 !filebrowser

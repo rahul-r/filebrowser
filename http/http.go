@@ -43,6 +43,7 @@ func NewHandler(
 	api := r.PathPrefix("/api").Subrouter()
 
 	api.Handle("/login", monkey(loginHandler, ""))
+	api.Handle("/logout", monkey(logoutHandler, ""))
 	api.Handle("/signup", monkey(signupHandler, ""))
 	api.Handle("/renew", monkey(renewHandler, ""))
 

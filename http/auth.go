@@ -1,10 +1,14 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -98,11 +102,64 @@ func withAdmin(fn handleFunc) handleFunc {
 	})
 }
 
+type jsonCred struct {
+	Password  string `json:"password"`
+	Username  string `json:"username"`
+	ReCaptcha string `json:"recaptcha"`
+}
+
+func mount(image_path string, password string) (int, error) {
+	cmd := exec.Command("./mount.sh", image_path, password)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		msg := fmt.Sprint(err) + ": " + stderr.String()
+		log.Print(msg)
+		return http.StatusInternalServerError, fmt.Errorf(msg)
+	}
+	log.Println(out.String())
+	return http.StatusOK, nil
+}
+
+func umount() (int, error) {
+	cmd := exec.Command("./umount.sh")
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		msg := fmt.Sprint(err) + ": " + stderr.String()
+		log.Print(msg)
+		return http.StatusInternalServerError, fmt.Errorf(msg)
+	}
+	log.Println(out.String())
+	return http.StatusOK, nil
+}
+
 var loginHandler = func(w http.ResponseWriter, r *http.Request, d *data) (int, error) {
 	auther, err := d.store.Auth.Get(d.settings.AuthMethod)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
+
+	var cred jsonCred
+
+	err = json.NewDecoder(r.Body).Decode(&cred)
+	if err != nil {
+		return 0, err
+	}
+
+	// root directory = d.server.Root
+	c, err := mount("/data/"+cred.Username, cred.Password)
+	if err != nil {
+		return c, err
+	}
+
+	r.Body = ioutil.NopCloser(strings.NewReader(`{"username": "admin","password": "admin","recaptcha": ""}`))
 
 	user, err := auther.Auth(r, d.store.Users, d.server.Root)
 	if err == os.ErrPermission {
@@ -112,6 +169,10 @@ var loginHandler = func(w http.ResponseWriter, r *http.Request, d *data) (int, e
 	} else {
 		return printToken(w, r, d, user)
 	}
+}
+
+var logoutHandler = func(w http.ResponseWriter, r *http.Request, d *data) (int, error) {
+	return umount()
 }
 
 type signupBody struct {
