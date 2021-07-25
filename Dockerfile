@@ -9,7 +9,6 @@ HEALTHCHECK --start-period=2s --interval=5s --timeout=3s \
 
 # copy local files
 COPY docker/root/ /
-COPY filebrowser /usr/bin/filebrowser
 COPY docker_config.json /.filebrowser.json
 COPY mount.sh /mount.sh
 COPY umount.sh /umount.sh

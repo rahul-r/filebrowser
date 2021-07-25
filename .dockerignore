@@ -3,4 +3,7 @@
 !mount.sh
 !umount.sh
 !docker/*
+!.docker.json
+!mount.sh
+!umount.sh
 !filebrowser
