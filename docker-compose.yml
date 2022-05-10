@@ -1,0 +1,14 @@
+---
+version: '3.1'
+
+services:
+  files:
+    build: .
+    image: files
+    container_name: files
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - ./data/test_disk:/data/test_disk
+    ports:
+      - 8088:80
