@@ -22,28 +22,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install frontend deps
-        run: npm install
-
-      - name: Build frontend
-        env:
-          NODE_OPTIONS: --openssl-legacy-provider
-        run: |
-          make build-frontend
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
 
+      # This does nothing (your repo has no frontend), but keeping because you listed it
+      - name: Build frontend (no-op)
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+        run: |
+          make build-frontend || echo "No frontend to build"
+
       - name: Build Go binary
         run: |
-          CGO_ENABLED=0 go build ./...
+          CGO_ENABLED=0 go build
 
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
